@@ -126,12 +126,12 @@
 
     <!-- Background Music -->
     <audio id="bgMusic" loop>
-        <source src="your-song.mp3" type="audio/mpeg">
+        <source src="One Love - Shubh.mp3" type="audio/mpeg">
     </audio>
 
     <div class="hearts-bg" id="hearts-bg"></div>
 
-    <!-- Page 1 -->
+    <!-- Page 1 (Loads directly) -->
     <div id="page-1" class="page-container active">
         <img src="Uwu.jpg" alt="Cute Please" class="main-image">
         <h1>Will you let me take you out on a date? 🥺💖</h1>
@@ -179,23 +179,41 @@
         const bgMusic = document.getElementById('bgMusic');
         let audioPlayed = false;
 
-        // Function to start music on first click
-        function initAudio() {
+        // Sneaky trick: Start music the second she clicks or taps ANYWHERE on the screen
+        function startAudioSafely() {
             if (!audioPlayed) {
-                bgMusic.volume = 0.5; // Starts at 50% volume so it's not a jump scare
-                bgMusic.play();
-                audioPlayed = true;
+                bgMusic.volume = 0.5;
+                let playPromise = bgMusic.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        audioPlayed = true; // Music successfully started!
+                    }).catch(error => {
+                        // Browser still blocked it, waiting for a firmer click
+                    });
+                }
             }
         }
 
-        document.getElementById('noBtn').addEventListener('click', () => {
-            initAudio();
+        // Listen for taps/clicks anywhere on the body
+        document.body.addEventListener('click', startAudioSafely);
+        document.body.addEventListener('touchstart', startAudioSafely);
+
+        // Logic: Clicking 'No' hides Page 1 and shows Page 2
+        document.getElementById('noBtn').addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevents double-firing the background click
+            startAudioSafely();  // Force audio to play if it hasn't yet
             page1.classList.remove('active');
             page2.classList.add('active');
         });
 
-        function triggerYes() {
-            initAudio();
+        // Function to handle the 'Yes' action
+        function triggerYes(e) {
+            e.stopPropagation();
+            
+            // KILL the background music here so the video can play
+            bgMusic.pause();
+            bgMusic.currentTime = 0; 
+
             page1.classList.remove('active');
             page2.classList.remove('active');
             page3.classList.add('active');
